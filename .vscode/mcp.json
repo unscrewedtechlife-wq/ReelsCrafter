@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"IcePanel Docs": {
+			"type": "http",
+			"url": "https://docs.icepanel.io/~gitbook/mcp"
+		}
+	},
+	"inputs": []
+}

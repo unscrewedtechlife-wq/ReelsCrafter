@@ -1,0 +1,277 @@
+# yaml-language-server: $schema=https://api.icepanel.io/v1/schemas/LandscapeImportData# yaml-language-server: $schema=https://api.icepanel.io/v1/schemas/LandscapeImportData
+namespace: viewmax-platform
+modelObjects:
+  - id: domain-viewmax
+    name: Viewmax Platform
+    type: domain
+    caption: AI video SaaS platform for creating, processing, and delivering media.
+    status: live
+  - id: actor-platform-user
+    name: Platform User
+    type: actor
+    parentId: domain-viewmax
+    caption: User who uses the Viewmax web application.
+    status: live
+  - id: system-viewmax
+    name: Viewmax
+    type: system
+    parentId: domain-viewmax
+    caption: The internal platform that manages projects, generations, assets, billing, and teams.
+    technologyIds:
+      - 4QZq23Fxy9oyoCTmURM6
+    icon:
+      technologyId: 4QZq23Fxy9oyoCTmURM6
+    status: live
+  - id: app-web
+    name: Viewmax Web Application
+    type: app
+    parentId: system-viewmax
+    caption: Next.js browser application for the Viewmax user experience.
+    description: The React and Next.js frontend serves dashboard and studio workflows and calls the backend over HTTP and WebSocket connections.
+    technologyIds:
+      - lvUyvYYpLK6PQCoaAeKR
+      - 9ZYWgwsvAwKsjKK8lNgg
+      - 4QZq23Fxy9oyoCTmURM6
+    icon:
+      technologyId: 9ZYWgwsvAwKsjKK8lNgg
+    status: live
+  - id: component-web-ui
+    name: Dashboard and Studio UI
+    type: component
+    parentId: app-web
+    caption: Browser interface for projects, assets, generation, templates, billing, and team workflows.
+    technologyIds:
+      - 9ZYWgwsvAwKsjKK8lNgg
+    icon:
+      technologyId: 9ZYWgwsvAwKsjKK8lNgg
+    status: live
+  - id: app-api
+    name: Viewmax API
+    type: app
+    parentId: system-viewmax
+    caption: FastAPI backend exposing REST endpoints and a WebSocket endpoint.
+    description: The backend initializes the database, mounts local media, exposes domain routers, and coordinates storage, billing, and background generation jobs.
+    technologyIds:
+      - fK3P9HZzJS9tIt7J4tlb
+      - iGksOBIeifVFXOknv8fh
+      - 4QZq23Fxy9oyoCTmURM6
+    icon:
+      technologyId: iGksOBIeifVFXOknv8fh
+    status: live
+  - id: component-api-routers
+    name: REST API Routers
+    type: component
+    parentId: app-api
+    caption: Auth, project, generation, pipeline, asset, billing, template, and team HTTP routers.
+    technologyIds:
+      - iGksOBIeifVFXOknv8fh
+    icon:
+      technologyId: iGksOBIeifVFXOknv8fh
+    status: live
+  - id: component-api-websocket
+    name: WebSocket Gateway
+    type: component
+    parentId: app-api
+    caption: Forwards Redis pub/sub job events to connected browser clients.
+    technologyIds:
+      - WvIEkO9z2I38ilWhQKkz
+    icon:
+      technologyId: WvIEkO9z2I38ilWhQKkz
+    status: live
+  - id: app-worker
+    name: Viewmax Background Worker
+    type: app
+    parentId: system-viewmax
+    caption: ARQ worker that processes asynchronous media generation jobs.
+    description: The worker loads generation records, invokes registered providers, updates PostgreSQL, stores outputs, and publishes progress events through Redis.
+    technologyIds:
+      - fK3P9HZzJS9tIt7J4tlb
+      - 4QZq23Fxy9oyoCTmURM6
+      - ZIgoh8kUTWdvSEzfpHUI
+    icon:
+      technologyId: fK3P9HZzJS9tIt7J4tlb
+    status: live
+  - id: component-job-processor
+    name: ARQ Job Processor
+    type: component
+    parentId: app-worker
+    caption: Processes video, image, and voice generation jobs and broadcasts progress updates.
+    technologyIds:
+      - fK3P9HZzJS9tIt7J4tlb
+      - ZIgoh8kUTWdvSEzfpHUI
+    icon:
+      technologyId: ZIgoh8kUTWdvSEzfpHUI
+    status: live
+  - id: component-provider-registry
+    name: AI Provider Registry
+    type: component
+    parentId: app-worker
+    caption: Selects mock or configured video, image, and voice providers for generation jobs.
+    technologyIds:
+      - fK3P9HZzJS9tIt7J4tlb
+    icon:
+      technologyId: fK3P9HZzJS9tIt7J4tlb
+    status: live
+  - id: store-postgresql
+    name: Viewmax PostgreSQL Database
+    type: store
+    parentId: system-viewmax
+    caption: Relational store for users, projects, generations, assets, billing, templates, and teams.
+    technologyIds:
+      - AtAwOo48GPChCWOkPkkj
+    icon:
+      technologyId: AtAwOo48GPChCWOkPkkj
+    status: live
+  - id: store-redis
+    name: Viewmax Redis
+    type: store
+    parentId: system-viewmax
+    caption: Durable Redis service used by ARQ and Redis pub/sub for job events.
+    technologyIds:
+      - Yj8CPPXztMD4nMBi04y8
+    icon:
+      technologyId: Yj8CPPXztMD4nMBi04y8
+    status: live
+  - id: store-minio
+    name: Viewmax MinIO Object Storage
+    type: store
+    parentId: system-viewmax
+    caption: S3-compatible object storage for uploads, generated media, audio, projects, and exports.
+    technologyIds:
+      - MuodxRtdop2vzsFRYERP
+    icon:
+      technologyId: MuodxRtdop2vzsFRYERP
+    status: live
+  - id: system-stripe
+    name: Stripe
+    type: system
+    parentId: domain-viewmax
+    external: true
+    caption: External billing service configured for subscriptions and webhook handling.
+    technologyIds:
+      - 9IlghE8CHC6qDWDGBXoe
+    icon:
+      technologyId: 9IlghE8CHC6qDWDGBXoe
+    status: live
+  - id: system-ollama
+    name: Ollama
+    type: system
+    parentId: domain-viewmax
+    external: true
+    caption: Configured local LLM runtime endpoint for AI-assisted platform workflows.
+    technologyIds:
+      - OvDeTRdjMydF1zV2R0dr
+    icon:
+      technologyId: OvDeTRdjMydF1zV2R0dr
+    status: live
+  - id: system-comfyui
+    name: ComfyUI
+    type: system
+    parentId: domain-viewmax
+    external: true
+    caption: Configured local image-generation endpoint.
+    status: live
+  - id: system-piper-tts
+    name: Piper TTS
+    type: system
+    parentId: domain-viewmax
+    external: true
+    caption: Configured local text-to-speech endpoint.
+    status: live
+modelConnections:
+  - id: connection-user-web
+    name: Uses Viewmax
+    originId: actor-platform-user
+    targetId: app-web
+    direction: outgoing
+    status: live
+  - id: connection-web-api-http
+    name: Calls REST API
+    originId: app-web
+    targetId: app-api
+    direction: outgoing
+    status: live
+  - id: connection-web-api-websocket
+    name: Receives job events
+    originId: app-web
+    targetId: component-api-websocket
+    direction: outgoing
+    technologyIds:
+      - WvIEkO9z2I38ilWhQKkz
+    status: live
+  - id: connection-api-postgresql
+    name: Reads and writes application data
+    originId: app-api
+    targetId: store-postgresql
+    direction: outgoing
+    technologyIds:
+      - AtAwOo48GPChCWOkPkkj
+    status: live
+  - id: connection-api-redis
+    name: Enqueues jobs and publishes events
+    originId: app-api
+    targetId: store-redis
+    direction: outgoing
+    technologyIds:
+      - Yj8CPPXztMD4nMBi04y8
+    status: live
+  - id: connection-api-minio
+    name: Stores and retrieves assets
+    originId: app-api
+    targetId: store-minio
+    direction: outgoing
+    technologyIds:
+      - MuodxRtdop2vzsFRYERP
+    status: live
+  - id: connection-api-stripe
+    name: Processes billing operations
+    originId: app-api
+    targetId: system-stripe
+    direction: outgoing
+    technologyIds:
+      - 9IlghE8CHC6qDWDGBXoe
+    status: live
+  - id: connection-worker-postgresql
+    name: Updates job and user records
+    originId: app-worker
+    targetId: store-postgresql
+    direction: outgoing
+    technologyIds:
+      - AtAwOo48GPChCWOkPkkj
+    status: live
+  - id: connection-worker-redis
+    name: Consumes jobs and publishes progress
+    originId: app-worker
+    targetId: store-redis
+    direction: outgoing
+    technologyIds:
+      - Yj8CPPXztMD4nMBi04y8
+    status: live
+  - id: connection-worker-minio
+    name: Writes generated media
+    originId: app-worker
+    targetId: store-minio
+    direction: outgoing
+    technologyIds:
+      - MuodxRtdop2vzsFRYERP
+    status: live
+  - id: connection-worker-ollama
+    name: Requests local language-model inference
+    originId: app-worker
+    targetId: system-ollama
+    direction: outgoing
+    technologyIds:
+      - OvDeTRdjMydF1zV2R0dr
+    status: live
+  - id: connection-worker-comfyui
+    name: Requests local image generation
+    originId: app-worker
+    targetId: system-comfyui
+    direction: outgoing
+    status: live
+  - id: connection-worker-piper-tts
+    name: Requests local speech synthesis
+    originId: app-worker
+    targetId: system-piper-tts
+    direction: outgoing
+    status: live
