@@ -1,6 +1,8 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# ReelsCrafter (AI Video Studio) - Multi-Container Orchestration Architecture
+# ReelsCrafter Multi-Container Application Stack (Production / Dev)
 # ═══════════════════════════════════════════════════════════════════════════════
+
+name: reelscrafter-multi-container
 
 networks:
   frontend_net:
@@ -109,7 +111,7 @@ services:
   # ─── Application Tier: FastAPI API Gateway ─────────────────────────────────
   api:
     build:
-      context: ./apps/api
+      context: ../apps/api
       dockerfile: Dockerfile
     container_name: viewmax_api
     restart: unless-stopped
@@ -137,7 +139,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./apps/api:/app
+      - ../apps/api:/app
       - media_cache:/app/media_cache
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     networks:
@@ -147,7 +149,7 @@ services:
   # ─── Application Tier: Next.js 15 Web Studio ───────────────────────────────
   web:
     build:
-      context: ./apps/web
+      context: ../apps/web
       dockerfile: Dockerfile
       target: development
     container_name: viewmax_web
@@ -161,7 +163,7 @@ services:
     depends_on:
       - api
     volumes:
-      - ./apps/web:/app
+      - ../apps/web:/app
       - /app/node_modules
       - /app/.next
     command: npm run dev
@@ -171,7 +173,7 @@ services:
   # ─── Worker Tier: Central ARQ Job Queue Processor ───────────────────────────
   arq_worker:
     build:
-      context: ./apps/api
+      context: ../apps/api
       dockerfile: Dockerfile
     container_name: viewmax_arq_worker
     restart: unless-stopped
@@ -193,7 +195,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./apps/api:/app
+      - ../apps/api:/app
       - media_cache:/app/media_cache
     command: python -m arq workers.job_queue.WorkerSettings
     networks:
@@ -203,7 +205,7 @@ services:
   # ─── Worker Tier: Image Worker (FLUX / SDXL Inference) ──────────────────────
   image_worker:
     build:
-      context: ./workers
+      context: ../workers
       dockerfile: Dockerfile
     container_name: viewmax_image_worker
     restart: unless-stopped
@@ -214,7 +216,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./workers:/app
+      - ../workers:/app
     command: python image-worker/main.py
     networks:
       - worker_net
@@ -222,7 +224,7 @@ services:
   # ─── Worker Tier: Video Worker (LTX Video / Wan 2.1 / SVD) ─────────────────
   video_worker:
     build:
-      context: ./workers
+      context: ../workers
       dockerfile: Dockerfile
     container_name: viewmax_video_worker
     restart: unless-stopped
@@ -233,7 +235,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./workers:/app
+      - ../workers:/app
     command: python video-worker/main.py
     networks:
       - worker_net
@@ -241,7 +243,7 @@ services:
   # ─── Worker Tier: Voice Worker (Piper / Coqui / ElevenLabs TTS) ────────────
   voice_worker:
     build:
-      context: ./workers
+      context: ../workers
       dockerfile: Dockerfile
     container_name: viewmax_voice_worker
     restart: unless-stopped
@@ -252,7 +254,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./workers:/app
+      - ../workers:/app
     command: python voice-worker/main.py
     networks:
       - worker_net
@@ -260,7 +262,7 @@ services:
   # ─── Worker Tier: Render Worker (FFmpeg Hardware Compositor) ───────────────
   render_worker:
     build:
-      context: ./workers
+      context: ../workers
       dockerfile: Dockerfile
     container_name: viewmax_render_worker
     restart: unless-stopped
@@ -271,7 +273,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./workers:/app
+      - ../workers:/app
       - media_cache:/media_cache
     command: python render-worker/main.py
     networks:
@@ -280,7 +282,7 @@ services:
   # ─── Worker Tier: Storyboard Worker (Pre-vis Keyframe QA) ───────────────────
   storyboard_worker:
     build:
-      context: ./workers
+      context: ../workers
       dockerfile: Dockerfile
     container_name: viewmax_storyboard_worker
     restart: unless-stopped
@@ -290,7 +292,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./workers:/app
+      - ../workers:/app
     command: python storyboard-worker/main.py
     networks:
       - worker_net
@@ -298,7 +300,7 @@ services:
   # ─── Worker Tier: Captions Worker (Word-Level Subtitles) ────────────────────
   captions_worker:
     build:
-      context: ./workers
+      context: ../workers
       dockerfile: Dockerfile
     container_name: viewmax_captions_worker
     restart: unless-stopped
@@ -308,25 +310,8 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./workers:/app
+      - ../workers:/app
     command: python captions-worker/main.py
     networks:
       - worker_net
 
-  # ─── Worker Tier: Story & Clone Utility Worker ──────────────────────────────
-  utility_worker:
-    build:
-      context: ./workers
-      dockerfile: Dockerfile
-    container_name: viewmax_utility_worker
-    restart: unless-stopped
-    environment:
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_secret}@redis:6379/0
-    depends_on:
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./workers:/app
-    command: python story-worker/main.py
-    networks:
-      - worker_net
