@@ -1,0 +1,62 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+.npm
+.yarn
+.next
+.turbo
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.coverage
+.venv
+venv
+env
+ENV
+.Python
+dist
+build
+*.egg-info
+
+# Environment
+.env
+.env.local
+.env.*.local
+.DS_Store
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Build outputs
+dist
+build
+.cache
+
+# Documentation
+*.md
+LICENSE
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml

@@ -1,0 +1,170 @@
+name: CI/CD with Docker
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_API: ${{ github.repository }}/api
+  IMAGE_NAME_WEB: ${{ github.repository }}/web
+
+jobs:
+  # Build and test Node.js web application
+  build-web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'apps/web'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Build application
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Run linter (if available)
+        run: npm run lint --if-present
+        working-directory: apps/web
+
+      - name: Run type check (if available)
+        run: npm run type-check --if-present
+        working-directory: apps/web
+
+      - name: Run tests (if available)
+        run: npm test --if-present
+        working-directory: apps/web
+
+  # Build and test Python API application
+  build-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f apps/api/requirements.txt ]; then pip install -r apps/api/requirements.txt; fi
+        working-directory: apps/api
+
+      - name: Run tests (if available)
+        run: pytest --if-present
+        working-directory: apps/api
+
+  # Build Docker images (optional: push to registry on main branch)
+  docker-build-api:
+    needs: build-api
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api
+          file: ./apps/api/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Build Docker image for web app (optional)
+  docker-build-web:
+    needs: build-web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WEB }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+
+      - name: Build web app Dockerfile (if exists)
+        run: |
+          if [ -f apps/web/Dockerfile ]; then
+            echo "Dockerfile found, building..."
+          else
+            echo "No Dockerfile found in apps/web - skipping"
+          fi
+        shell: bash
+
+      - name: Build and push web image
+        if: hashFiles('apps/web/Dockerfile') != ''
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/web
+          file: ./apps/web/Dockerfile
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
